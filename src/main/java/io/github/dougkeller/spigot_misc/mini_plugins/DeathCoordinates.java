@@ -1,5 +1,6 @@
 package io.github.dougkeller.spigot_misc.mini_plugins;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -23,11 +24,14 @@ public class DeathCoordinates extends MiniPlugin {
     public void notifyCoordinates(Player player) {
         Location location = player.getLocation();
         String message = String.format(
-                "You died at X%d Y%d Z%d",
+                "%sYou died at %s%d %d %d",
+                ChatColor.AQUA,
+                ChatColor.GOLD,
                 location.getBlockX(),
                 location.getBlockY(),
                 location.getBlockZ()
         );
-        player.chat(message);
+
+        player.sendMessage(message);
     }
 }
