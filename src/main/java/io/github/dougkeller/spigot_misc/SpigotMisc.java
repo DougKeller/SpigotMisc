@@ -1,6 +1,6 @@
 package io.github.dougkeller.spigot_misc;
 
-import io.github.dougkeller.spigot_misc.components.DeathCoordinatesComponent;
+import io.github.dougkeller.spigot_misc.mini_plugins.DeathCoordinates;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -20,13 +20,13 @@ public class SpigotMisc extends JavaPlugin implements Listener {
 
     //    @EventHandler
     //    public void onPlayerPortal(PlayerPortalEvent event) {
-    //        NetherPortalFixComponent handler = new NetherPortalFixComponent(this);
-    //        handler.handle(event);
+    //        NetherPortalFix plugin = new NetherPortalFix(this);
+    //        plugin.handle(event);
     //    }
 
     @EventHandler
     public void onPlayerDeath(EntityDeathEvent event) {
-        DeathCoordinatesComponent handler = new DeathCoordinatesComponent(this);
-        handler.handle(event);
+        DeathCoordinates plugin = new DeathCoordinates(this);
+        plugin.handle(event);
     }
 }

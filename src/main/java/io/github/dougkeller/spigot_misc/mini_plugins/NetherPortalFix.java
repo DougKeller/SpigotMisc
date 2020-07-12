@@ -1,11 +1,11 @@
-package io.github.dougkeller.spigot_misc.components;
+package io.github.dougkeller.spigot_misc.mini_plugins;
 
 import org.bukkit.Location;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class NetherPortalFixComponent extends Component {
-    public NetherPortalFixComponent(JavaPlugin plugin) {
+public class NetherPortalFix extends MiniPlugin {
+    public NetherPortalFix(JavaPlugin plugin) {
         super(plugin);
     }
 

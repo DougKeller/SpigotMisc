@@ -1,4 +1,4 @@
-package io.github.dougkeller.spigot_misc.components;
+package io.github.dougkeller.spigot_misc.mini_plugins;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
@@ -6,8 +6,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class DeathCoordinatesComponent extends Component {
-    public DeathCoordinatesComponent(JavaPlugin plugin) {
+public class DeathCoordinates extends MiniPlugin {
+    public DeathCoordinates(JavaPlugin plugin) {
         super(plugin);
     }
 
