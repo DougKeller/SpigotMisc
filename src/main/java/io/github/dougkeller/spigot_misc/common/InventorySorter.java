@@ -57,7 +57,7 @@ public class InventorySorter {
     private ItemStack[] sortContents(ItemStack[] contents) {
         List<ItemStack> list = Arrays.asList(contents);
 
-        Collections.sort(list, new ItemStackComparator());
+        Collections.sort(list, new InventorySorterComparator());
         return (ItemStack[]) list.toArray();
     }
 
