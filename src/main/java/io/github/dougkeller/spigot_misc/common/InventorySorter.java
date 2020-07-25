@@ -62,7 +62,7 @@ public class InventorySorter {
     }
 
     private boolean isSameItem(ItemStack a, ItemStack b) {
-        if (a.getType() != b.getType()) {
+        if (a.getData() != b.getData()) {
             return false;
         }
 
