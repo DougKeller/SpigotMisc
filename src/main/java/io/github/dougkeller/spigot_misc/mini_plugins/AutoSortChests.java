@@ -3,8 +3,8 @@ package io.github.dougkeller.spigot_misc.mini_plugins;
 import io.github.dougkeller.spigot_misc.common.InventorySorter;
 import org.bukkit.block.Chest;
 import org.bukkit.block.DoubleChest;
-import org.bukkit.event.inventory.InventoryOpenEvent;
-import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.inventory.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -40,4 +40,17 @@ public class AutoSortChests extends MiniPlugin {
     private boolean isEnderChest(Inventory inventory) {
         return inventory.getType() == InventoryType.ENDER_CHEST;
     }
+
+    public void handle(InventoryClickEvent event) {
+    }
+
+    public void handle(InventoryDragEvent event) {
+    }
+
+    public void handle(EntityPickupItemEvent event) {
+    }
+
+    public void handle(InventoryPickupItemEvent event) {
+    }
+
 }
