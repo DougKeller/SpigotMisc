@@ -22,7 +22,7 @@ public class InventorySorter {
     }
 
     private ItemStack[] combineContents(ItemStack[] contents) {
-        for (int i = 0; i < contents.length; i++) {
+        for (int i = 0; i < contents.length - 1; i++) {
             ItemStack a = contents[i];
             if (a == null) {
                 continue;
@@ -56,7 +56,6 @@ public class InventorySorter {
 
     private ItemStack[] sortContents(ItemStack[] contents) {
         List<ItemStack> list = Arrays.asList(contents);
-
         Collections.sort(list, new ItemStackComparator());
         return (ItemStack[]) list.toArray();
     }
