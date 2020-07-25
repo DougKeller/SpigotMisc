@@ -30,7 +30,7 @@ public class InventorySorter {
 
             for (int j = i + 1; j < contents.length; j++) {
                 ItemStack b = contents[j];
-                if (b == null || !isSameItem(a, b)) {
+                if (b == null || !ItemStackComparator.isSameItem(a, b)) {
                     continue;
                 }
 
@@ -57,15 +57,7 @@ public class InventorySorter {
     private ItemStack[] sortContents(ItemStack[] contents) {
         List<ItemStack> list = Arrays.asList(contents);
 
-        Collections.sort(list, new InventorySorterComparator());
+        Collections.sort(list, new ItemStackComparator());
         return (ItemStack[]) list.toArray();
-    }
-
-    private boolean isSameItem(ItemStack a, ItemStack b) {
-        if (a.getData() != b.getData()) {
-            return false;
-        }
-
-        return a.getItemMeta().equals(b.getItemMeta());
     }
 }
