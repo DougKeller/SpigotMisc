@@ -24,12 +24,6 @@ public class SpigotMisc extends JavaPlugin implements Listener {
         getLogger().info("SpigotMisc loaded!");
     }
 
-    //    @EventHandler
-    //    public void onPlayerPortal(PlayerPortalEvent event) {
-    //        NetherPortalFix plugin = new NetherPortalFix(this);
-    //        plugin.handle(event);
-    //    }
-
     @EventHandler
     public void onPlayerDeath(EntityDeathEvent event) {
         DeathCoordinates plugin = new DeathCoordinates(this);
