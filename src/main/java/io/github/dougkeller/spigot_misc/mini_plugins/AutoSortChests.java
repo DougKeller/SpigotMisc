@@ -1,13 +1,17 @@
 package io.github.dougkeller.spigot_misc.mini_plugins;
 
+import io.github.dougkeller.spigot_misc.common.InventoryCombiner;
 import io.github.dougkeller.spigot_misc.common.InventorySorter;
 import org.bukkit.block.Chest;
 import org.bukkit.block.DoubleChest;
+import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityPickupItemEvent;
-import org.bukkit.event.inventory.*;
+import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class AutoSortChests extends MiniPlugin {
     public AutoSortChests(JavaPlugin plugin) {
@@ -16,16 +20,12 @@ public class AutoSortChests extends MiniPlugin {
 
     public void handle(InventoryOpenEvent event) {
         Inventory inventory = event.getInventory();
-        if (!canSortInventory(inventory)) {
+        if (!isStorageChest(inventory) && !isEnderChest(inventory)) {
             return;
         }
 
-        InventorySorter sorter = new InventorySorter(inventory);
-        sorter.sort();
-    }
-
-    private boolean canSortInventory(Inventory inventory) {
-        return isStorageChest(inventory) || isEnderChest(inventory);
+        (new InventoryCombiner(inventory)).combine();
+        (new InventorySorter(inventory)).sort();
     }
 
     private boolean isStorageChest(Inventory inventory) {
@@ -41,16 +41,20 @@ public class AutoSortChests extends MiniPlugin {
         return inventory.getType() == InventoryType.ENDER_CHEST;
     }
 
-    public void handle(InventoryClickEvent event) {
-    }
-
-    public void handle(InventoryDragEvent event) {
-    }
-
     public void handle(EntityPickupItemEvent event) {
-    }
+        boolean isPlayer = event.getEntity() instanceof Player;
+        if (!isPlayer) {
+            return;
+        }
 
-    public void handle(InventoryPickupItemEvent event) {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                Player player = (Player) event.getEntity();
+                Inventory inventory = player.getInventory();
+                (new InventoryCombiner(inventory)).combine();
+                (new InventorySorter(inventory, 9, 27)).sort();
+            }
+        }.runTaskLater(plugin, 1);
     }
-
 }

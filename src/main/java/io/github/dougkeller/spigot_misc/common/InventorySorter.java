@@ -9,54 +9,36 @@ import java.util.List;
 
 public class InventorySorter {
     private Inventory inventory;
+    private int indexStart;
+    private int length;
 
     public InventorySorter(Inventory inventory) {
+        this(inventory, 0, inventory.getContents().length);
+    }
+
+    public InventorySorter(Inventory inventory, int indexStart, int length) {
         this.inventory = inventory;
+        this.indexStart = indexStart;
+        this.length = length;
     }
 
     public void sort() {
+        System.out.println("SORT");
         ItemStack[] contents = inventory.getContents();
-        ItemStack[] combinedContents = combineContents(contents);
-        ItemStack[] sortedContents = sortContents(combinedContents);
+        ItemStack[] sortedContents = sortContents(contents);
         inventory.setContents(sortedContents);
-    }
-
-    private ItemStack[] combineContents(ItemStack[] contents) {
-        for (int i = 0; i < contents.length - 1; i++) {
-            ItemStack a = contents[i];
-            if (a == null) {
-                continue;
-            }
-
-            for (int j = i + 1; j < contents.length; j++) {
-                ItemStack b = contents[j];
-                if (b == null || !ItemStackComparator.isSameItem(a, b)) {
-                    continue;
-                }
-
-                int maxStackSize = a.getMaxStackSize();
-                int aAmount = a.getAmount();
-                if (aAmount >= maxStackSize) {
-                    continue;
-                }
-
-                int bAmount = b.getAmount();
-                int amountToCombine = Math.min(maxStackSize - aAmount, bAmount);
-                a.setAmount(aAmount + amountToCombine);
-                b.setAmount(bAmount - amountToCombine);
-
-                if (b.getAmount() == 0) {
-                    contents[j] = null;
-                }
-            }
-        }
-
-        return contents;
     }
 
     private ItemStack[] sortContents(ItemStack[] contents) {
         List<ItemStack> list = Arrays.asList(contents);
-        Collections.sort(list, new ItemStackComparator());
+
+        List<ItemStack> sortableList = list.subList(indexStart, indexStart + length);
+        Collections.sort(sortableList, new ItemStackComparator());
+
+        for (int i = 0; i < length; ++i) {
+            list.set(i + indexStart, sortableList.get(i));
+        }
+
         return (ItemStack[]) list.toArray();
     }
 }
