@@ -23,7 +23,6 @@ public class InventorySorter {
     }
 
     public void sort() {
-        System.out.println("SORT");
         ItemStack[] contents = inventory.getContents();
         ItemStack[] sortedContents = sortContents(contents);
         inventory.setContents(sortedContents);
