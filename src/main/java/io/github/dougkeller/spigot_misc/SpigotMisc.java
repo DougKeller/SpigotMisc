@@ -6,6 +6,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -35,6 +36,12 @@ public class SpigotMisc extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onInventoryOpen(InventoryOpenEvent event) {
+        AutoSortChests plugin = new AutoSortChests(this);
+        plugin.handle(event);
+    }
+
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
         AutoSortChests plugin = new AutoSortChests(this);
         plugin.handle(event);
     }
