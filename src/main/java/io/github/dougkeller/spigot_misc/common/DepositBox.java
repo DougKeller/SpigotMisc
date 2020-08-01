@@ -145,22 +145,36 @@ public class DepositBox {
     public static Sign getDepositBoxSign(Chest chest) {
         Block chestBlock = chest.getBlock();
 
+        Sign sign = findSignAt(chestBlock, 0, -2, 0);
+        if (sign != null) {
+            return sign;
+        }
+
         for (int offsetX = -1; offsetX <= 1; ++offsetX) {
             for (int offsetY = -1; offsetY <= 1; ++offsetY) {
                 for (int offsetZ = -1; offsetZ <= 1; ++offsetZ) {
-                    Block blockAtFace = chestBlock.getRelative(offsetX, offsetY, offsetZ);
-                    BlockState blockState = blockAtFace.getState();
-                    boolean isSign = blockState instanceof Sign;
-                    if (!isSign) {
-                        continue;
-                    }
-
-                    Sign sign = (Sign) blockState;
-                    if (isDepositBox(sign)) {
+                    sign = findSignAt(chestBlock, offsetX, offsetY, offsetZ);
+                    if (sign != null) {
                         return sign;
                     }
                 }
             }
+        }
+
+        return null;
+    }
+
+    private static Sign findSignAt(Block chestBlock, int offsetX, int offsetY, int offsetZ) {
+        Block blockAtFace = chestBlock.getRelative(offsetX, offsetY, offsetZ);
+        BlockState blockState = blockAtFace.getState();
+        boolean isSign = blockState instanceof Sign;
+        if (!isSign) {
+            return null;
+        }
+
+        Sign sign = (Sign) blockState;
+        if (isDepositBox(sign)) {
+            return sign;
         }
 
         return null;
