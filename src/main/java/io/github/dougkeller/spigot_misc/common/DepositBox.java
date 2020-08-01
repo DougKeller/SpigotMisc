@@ -70,6 +70,7 @@ public class DepositBox {
         ItemStack[] contents = inventory.getContents();
 
         int totalSorted = 0;
+        int totalFailed = 0;
 
         for (int i = 0; i < contents.length; ++i) {
             ItemStack itemStack = contents[i];
@@ -81,12 +82,19 @@ public class DepositBox {
             if (itemStack.getAmount() == 0) {
                 contents[i] = null;
                 totalSorted++;
+            } else {
+                totalFailed++;
             }
         }
 
         if (totalSorted > 0) {
             String noun = totalSorted == 1 ? "item" : "items";
             player.sendMessage(String.format(ChatColor.GREEN + "Deposited %d %s.", totalSorted, noun));
+        }
+
+        if (totalFailed > 0) {
+            String noun = totalFailed == 1 ? "item" : "items";
+            player.sendMessage(String.format(ChatColor.GOLD + "Could not deposit %d %s.", totalFailed, noun));
         }
 
         inventory.setContents(contents);
