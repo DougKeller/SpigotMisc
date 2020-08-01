@@ -1,5 +1,6 @@
 package io.github.dougkeller.spigot_misc.mini_plugins;
 
+import io.github.dougkeller.spigot_misc.common.AutoSortableInventory;
 import io.github.dougkeller.spigot_misc.common.InventoryCombiner;
 import io.github.dougkeller.spigot_misc.common.InventorySorter;
 import org.bukkit.block.Chest;
@@ -26,16 +27,34 @@ public class AutoSortChests extends MiniPlugin {
 
     public void handle(InventoryOpenEvent event) {
         Inventory inventory = event.getInventory();
-        if (!isStorageChest(inventory)) {
+        sortInventory(inventory);
+    }
+
+    private void sortInventory(Inventory inventory) {
+        if (isStorageChest(inventory)) {
+            if (AutoSortableInventory.isAutoSortable(inventory)) {
+                (new AutoSortableInventory(inventory)).sort();
+                return;
+            }
+
+            (new InventoryCombiner(inventory)).combine();
+            (new InventorySorter(inventory)).sort();
             return;
         }
 
-        (new InventoryCombiner(inventory)).combine();
-        (new InventorySorter(inventory)).sort();
+        if (isPlayerInventory(inventory)) {
+            (new InventoryCombiner(inventory)).combine();
+            (new InventorySorter(inventory, MAIN_INVENTORY_START, MAIN_INVENTORY_SIZE)).sort();
+            return;
+        }
     }
 
     private boolean isStorageChest(Inventory inventory) {
         return isWoodenChest(inventory) || isEnderChest(inventory);
+    }
+
+    private boolean isPlayerInventory(Inventory inventory) {
+        return inventory instanceof PlayerInventory;
     }
 
     private boolean isWoodenChest(Inventory inventory) {
@@ -66,28 +85,9 @@ public class AutoSortChests extends MiniPlugin {
         }.runTaskLater(plugin, 1);
     }
 
-    private void sortInventory(Inventory inventory) {
-        if (isStorageChest(inventory)) {
-            (new InventoryCombiner(inventory)).combine();
-            (new InventorySorter(inventory)).sort();
-        }
-
-        if (isPlayerInventory(inventory)) {
-            (new InventoryCombiner(inventory)).combine();
-            (new InventorySorter(inventory, MAIN_INVENTORY_START, MAIN_INVENTORY_SIZE)).sort();
-        }
-    }
-
-    private boolean isPlayerInventory(Inventory inventory) {
-        return inventory instanceof PlayerInventory;
-    }
-
     public void handle(InventoryClickEvent event) {
         InventoryView view = event.getView();
         Inventory oppositeInventory = event.getClickedInventory() == view.getTopInventory() ? view.getBottomInventory() : view.getTopInventory();
-        if (!isStorageChest(oppositeInventory) && !isPlayerInventory(oppositeInventory)) {
-            return;
-        }
 
         new BukkitRunnable() {
             @Override
