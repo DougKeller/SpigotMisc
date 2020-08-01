@@ -5,6 +5,10 @@ import org.bukkit.inventory.ItemStack;
 import java.util.Comparator;
 
 public class ItemStackComparator implements Comparator<ItemStack> {
+    public static boolean isSimilarItem(ItemStack a, ItemStack b) {
+        return a.getType().equals(b.getType());
+    }
+
     @Override
     public int compare(ItemStack a, ItemStack b) {
         if (a == null && b == null)

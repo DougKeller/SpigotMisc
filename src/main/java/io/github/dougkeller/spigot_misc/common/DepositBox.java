@@ -14,6 +14,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.stream.Stream;
 
 public class DepositBox {
     public static final int DEFAULT_RADIUS = 3;
@@ -24,6 +25,7 @@ public class DepositBox {
     private Chest chest;
     private Sign sign;
     private int radius;
+    private boolean laxMode;
 
     public DepositBox(Inventory inventory, Player player) {
         if (!isDepositBox(inventory)) {
@@ -36,7 +38,7 @@ public class DepositBox {
         this.chest = getAutoSortableChest(inventory);
         this.sign = getDepositBoxSign(chest);
         this.radius = parseRadius();
-        syncSignText();
+        this.laxMode = !sign.getLine(2).toLowerCase().equals("strict");
     }
 
     public static boolean isDepositBox(Inventory inventory) {
@@ -78,8 +80,7 @@ public class DepositBox {
                 continue;
             }
 
-            store(itemStack);
-            if (itemStack.getAmount() == 0) {
+            if (store(itemStack)) {
                 contents[i] = null;
                 totalSorted++;
             } else {
@@ -100,21 +101,9 @@ public class DepositBox {
         inventory.setContents(contents);
     }
 
-    private void store(ItemStack itemStack) {
-        for (Chest targetChest : getTargetChests()) {
-            Inventory targetInventory = targetChest.getInventory();
-            if (!targetInventory.containsAtLeast(itemStack, 1)) {
-                continue;
-            }
-
-            HashMap<Integer, ItemStack> excessItemStacks = targetInventory.addItem(itemStack);
-            int remaining = excessItemStacks.isEmpty() ? 0 : excessItemStacks.get(0).getAmount();
-            itemStack.setAmount(remaining);
-
-            if (itemStack.getAmount() == 0) {
-                return;
-            }
-        }
+    private boolean store(ItemStack itemStack) {
+        ArrayList<Chest> targetChests = getTargetChests();
+        return storeStrict(itemStack, targetChests) || laxMode && storeSimilar(itemStack, targetChests);
     }
 
     public ArrayList<Chest> getTargetChests() {
@@ -136,6 +125,46 @@ public class DepositBox {
         }
 
         return targetChests;
+    }
+
+    private boolean storeStrict(ItemStack itemStack, ArrayList<Chest> targetChests) {
+        for (Chest targetChest : targetChests) {
+            Inventory targetInventory = targetChest.getInventory();
+            if (!targetInventory.containsAtLeast(itemStack, 1)) {
+                continue;
+            }
+
+            HashMap<Integer, ItemStack> excessItemStacks = targetInventory.addItem(itemStack);
+            int remaining = excessItemStacks.isEmpty() ? 0 : excessItemStacks.get(0).getAmount();
+            itemStack.setAmount(remaining);
+
+            if (itemStack.getAmount() == 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean storeSimilar(ItemStack itemStack, ArrayList<Chest> targetChests) {
+        for (Chest targetChest : targetChests) {
+            Inventory targetInventory = targetChest.getInventory();
+            Stream<ItemStack> stream = Stream.of(targetInventory.getContents());
+            boolean containsSimilar = stream.anyMatch(i -> i != null && ItemStackComparator.isSimilarItem(itemStack, i));
+            if (!containsSimilar) {
+                continue;
+            }
+
+            HashMap<Integer, ItemStack> excessItemStacks = targetInventory.addItem(itemStack);
+            int remaining = excessItemStacks.isEmpty() ? 0 : excessItemStacks.get(0).getAmount();
+            itemStack.setAmount(remaining);
+
+            if (itemStack.getAmount() == 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static boolean isDepositBox(Chest chest) {
@@ -199,12 +228,5 @@ public class DepositBox {
         }
 
         return parsed;
-    }
-
-    private void syncSignText() {
-        sign.setLine(0, "[Deposit Box]");
-        sign.setLine(1, String.format("Radius: %d", radius));
-        sign.setLine(2, String.format("Default: %d", DEFAULT_RADIUS));
-        sign.setLine(3, String.format("Max: %d", MAX_RADIUS));
     }
 }
