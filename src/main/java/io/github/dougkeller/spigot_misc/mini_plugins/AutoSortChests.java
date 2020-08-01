@@ -1,6 +1,5 @@
 package io.github.dougkeller.spigot_misc.mini_plugins;
 
-import io.github.dougkeller.spigot_misc.common.DepositBox;
 import io.github.dougkeller.spigot_misc.common.InventoryCombiner;
 import io.github.dougkeller.spigot_misc.common.InventorySorter;
 import org.bukkit.block.Chest;
@@ -8,7 +7,6 @@ import org.bukkit.block.DoubleChest;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
@@ -91,15 +89,5 @@ public class AutoSortChests extends MiniPlugin {
                 sortInventory(oppositeInventory);
             }
         }.runTaskLater(plugin, 1);
-    }
-
-    public void handle(InventoryCloseEvent event) {
-        Inventory inventory = event.getInventory();
-        if (!DepositBox.isDepositBox(inventory)) {
-            return;
-        }
-
-        Player player = (Player) event.getPlayer();
-        (new DepositBox(inventory, player)).sort();
     }
 }

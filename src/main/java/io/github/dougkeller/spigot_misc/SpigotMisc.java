@@ -2,6 +2,7 @@ package io.github.dougkeller.spigot_misc;
 
 import io.github.dougkeller.spigot_misc.mini_plugins.AutoSortChests;
 import io.github.dougkeller.spigot_misc.mini_plugins.DeathCoordinates;
+import io.github.dougkeller.spigot_misc.mini_plugins.DepositBoxes;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -49,7 +50,7 @@ public class SpigotMisc extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
-        AutoSortChests plugin = new AutoSortChests(this);
+        DepositBoxes plugin = new DepositBoxes(this);
         plugin.handle(event);
     }
 }
