@@ -17,8 +17,8 @@ import java.util.HashMap;
 import java.util.stream.Stream;
 
 public class DepositBox {
-    public static final int DEFAULT_RADIUS = 3;
-    public static final int MAX_RADIUS = 6;
+    public static final int DEFAULT_RADIUS = 5;
+    public static final int MAX_RADIUS = 10;
 
     private Inventory inventory;
     private Player player;
@@ -173,20 +173,24 @@ public class DepositBox {
 
     public static Sign getDepositBoxSign(Chest chest) {
         Block chestBlock = chest.getBlock();
+        Sign sign;
 
-        Sign sign = findSignAt(chestBlock, 0, -2, 0);
-        if (sign != null) {
-            return sign;
+        for (int offsetY = -2; offsetY <= 1; ++offsetY) {
+            sign = findSignAt(chestBlock, 0, offsetY, 0);
+            if (sign != null) {
+                return sign;
+            }
         }
-
         for (int offsetX = -1; offsetX <= 1; ++offsetX) {
-            for (int offsetY = -1; offsetY <= 1; ++offsetY) {
-                for (int offsetZ = -1; offsetZ <= 1; ++offsetZ) {
-                    sign = findSignAt(chestBlock, offsetX, offsetY, offsetZ);
-                    if (sign != null) {
-                        return sign;
-                    }
-                }
+            sign = findSignAt(chestBlock, offsetX, 0, 0);
+            if (sign != null) {
+                return sign;
+            }
+        }
+        for (int offsetZ = -1; offsetZ <= 1; ++offsetZ) {
+            sign = findSignAt(chestBlock, 0, 0, offsetZ);
+            if (sign != null) {
+                return sign;
             }
         }
 
