@@ -1,11 +1,13 @@
 package io.github.dougkeller.spigot_misc.common;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.block.Sign;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -13,28 +15,31 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class AutoSortableInventory {
+public class DepositBox {
     public static final int DEFAULT_RADIUS = 3;
     public static final int MAX_RADIUS = 6;
 
     private Inventory inventory;
+    private Player player;
     private Chest chest;
     private Sign sign;
     private int radius;
 
-    public AutoSortableInventory(Inventory inventory) {
-        if (!isAutoSortable(inventory)) {
+    public DepositBox(Inventory inventory, Player player) {
+        if (!isDepositBox(inventory)) {
             throw new IllegalArgumentException();
         }
 
         this.inventory = inventory;
+        this.player = player;
+
         this.chest = getAutoSortableChest(inventory);
-        this.sign = getAutoSortableSign(chest);
+        this.sign = getDepositBoxSign(chest);
         this.radius = parseRadius();
         syncSignText();
     }
 
-    public static boolean isAutoSortable(Inventory inventory) {
+    public static boolean isDepositBox(Inventory inventory) {
         InventoryHolder holder = inventory.getHolder();
         boolean isSingleWoodenChest = holder instanceof Chest;
         if (!isSingleWoodenChest) {
@@ -42,7 +47,7 @@ public class AutoSortableInventory {
         }
 
         Chest chest = (Chest) holder;
-        return isAutoSortable(chest);
+        return isDepositBox(chest);
     }
 
     public static Chest getAutoSortableChest(Inventory inventory) {
@@ -53,7 +58,7 @@ public class AutoSortableInventory {
         }
 
         Chest chest = (Chest) holder;
-        if (getAutoSortableSign(chest) == null) {
+        if (getDepositBoxSign(chest) == null) {
             return null;
         }
 
@@ -64,6 +69,8 @@ public class AutoSortableInventory {
         Inventory inventory = chest.getInventory();
         ItemStack[] contents = inventory.getContents();
 
+        int totalSorted = 0;
+
         for (int i = 0; i < contents.length; ++i) {
             ItemStack itemStack = contents[i];
             if (itemStack == null) {
@@ -73,7 +80,13 @@ public class AutoSortableInventory {
             store(itemStack);
             if (itemStack.getAmount() == 0) {
                 contents[i] = null;
+                totalSorted++;
             }
+        }
+
+        if (totalSorted > 0) {
+            String noun = totalSorted == 1 ? "item" : "items";
+            player.sendMessage(String.format(ChatColor.GREEN + "Deposited %d %s.", totalSorted, noun));
         }
 
         inventory.setContents(contents);
@@ -107,7 +120,7 @@ public class AutoSortableInventory {
                     Location targetLocation = new Location(world, x, y, z);
                     Block targetBlock = targetLocation.getBlock();
                     BlockState targetBlockState = targetBlock.getState();
-                    if (targetBlockState instanceof Chest && !isAutoSortable((Chest) targetBlockState)) {
+                    if (targetBlockState instanceof Chest && !isDepositBox((Chest) targetBlockState)) {
                         targetChests.add((Chest) targetBlockState);
                     }
                 }
@@ -117,11 +130,11 @@ public class AutoSortableInventory {
         return targetChests;
     }
 
-    public static boolean isAutoSortable(Chest chest) {
-        return getAutoSortableSign(chest) != null;
+    public static boolean isDepositBox(Chest chest) {
+        return getDepositBoxSign(chest) != null;
     }
 
-    public static Sign getAutoSortableSign(Chest chest) {
+    public static Sign getDepositBoxSign(Chest chest) {
         Block chestBlock = chest.getBlock();
 
         for (int offsetX = -1; offsetX <= 1; ++offsetX) {
@@ -135,7 +148,7 @@ public class AutoSortableInventory {
                     }
 
                     Sign sign = (Sign) blockState;
-                    if (isAutoSortable(sign)) {
+                    if (isDepositBox(sign)) {
                         return sign;
                     }
                 }
@@ -145,9 +158,9 @@ public class AutoSortableInventory {
         return null;
     }
 
-    public static boolean isAutoSortable(Sign sign) {
+    public static boolean isDepositBox(Sign sign) {
         String[] lines = sign.getLines();
-        return lines[0].toLowerCase().matches("\\[autosort]");
+        return lines[0].toLowerCase().matches("\\[deposit box]");
     }
 
     private int parseRadius() {
@@ -167,7 +180,9 @@ public class AutoSortableInventory {
     }
 
     private void syncSignText() {
+        sign.setLine(0, "[Deposit Box]");
+        sign.setLine(1, String.format("Radius: %d", radius));
         sign.setLine(2, String.format("Default: %d", DEFAULT_RADIUS));
-        sign.setLine(2, String.format("Max: %d", MAX_RADIUS));
+        sign.setLine(3, String.format("Max: %d", MAX_RADIUS));
     }
 }
