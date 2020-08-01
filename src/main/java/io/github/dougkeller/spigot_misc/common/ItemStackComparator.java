@@ -6,7 +6,7 @@ import java.util.Comparator;
 
 public class ItemStackComparator implements Comparator<ItemStack> {
     public static boolean isSimilarItem(ItemStack a, ItemStack b) {
-        return a.getType().equals(b.getType());
+        return a.getType().equals(b.getType()) || a.getData().equals(b.getData());
     }
 
     @Override
