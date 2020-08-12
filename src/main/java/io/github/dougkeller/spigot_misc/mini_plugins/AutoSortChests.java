@@ -17,8 +17,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class AutoSortChests extends MiniPlugin {
-    private final int MAIN_INVENTORY_START = 9;
-    private final int MAIN_INVENTORY_SIZE = 27;
+    public static final int MAIN_INVENTORY_START = 9;
+    public static final int MAIN_INVENTORY_SIZE = 27;
 
     public AutoSortChests(JavaPlugin plugin) {
         super(plugin);

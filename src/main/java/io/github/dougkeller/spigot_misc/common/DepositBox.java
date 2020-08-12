@@ -1,5 +1,6 @@
 package io.github.dougkeller.spigot_misc.common;
 
+import io.github.dougkeller.spigot_misc.mini_plugins.AutoSortChests;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -22,23 +23,76 @@ public class DepositBox {
 
     private Inventory inventory;
     private Player player;
-    private Chest chest;
-    private Sign sign;
+    private Location centerPoint;
     private int radius;
     private boolean laxMode;
+    private int indexStart;
+    private int length;
 
-    public DepositBox(Inventory inventory, Player player) {
-        if (!isDepositBox(inventory)) {
+    public DepositBox(Inventory inventory, Player player, Location centerPoint, int radius, boolean laxMode, int indexStart, int length) {
+        this.inventory = inventory;
+        this.player = player;
+        this.centerPoint = centerPoint;
+        this.radius = radius;
+        this.laxMode = laxMode;
+        this.indexStart = indexStart;
+        this.length = length;
+    }
+
+    public static DepositBox newFromChest(Chest chest, Player player) {
+        if (!isDepositBox(chest)) {
             throw new IllegalArgumentException();
         }
 
-        this.inventory = inventory;
-        this.player = player;
+        Inventory inventory = chest.getInventory();
+        Location centerPoint = chest.getLocation();
+        Sign sign = getDepositBoxSign(chest);
+        int radius = parseRadius(sign);
+        boolean laxMode = parseLaxMode(sign);
+        int indexStart = 0;
+        int length = inventory.getContents().length;
 
-        this.chest = getAutoSortableChest(inventory);
-        this.sign = getDepositBoxSign(chest);
-        this.radius = parseRadius();
-        this.laxMode = !sign.getLine(2).toLowerCase().equals("strict");
+        return new DepositBox(inventory, player, centerPoint, radius, laxMode, indexStart, length);
+    }
+
+    public static DepositBox newFromSign(Sign sign, Player player) {
+        if (!isDepositBox(sign)) {
+            throw new IllegalArgumentException();
+        }
+
+        Inventory inventory = player.getInventory();
+        Location centerPoint = sign.getLocation();
+        int radius = parseRadius(sign);
+        boolean laxMode = parseLaxMode(sign);
+        int indexStart = AutoSortChests.MAIN_INVENTORY_START;
+        int length = AutoSortChests.MAIN_INVENTORY_SIZE;
+
+        return new DepositBox(inventory, player, centerPoint, radius, laxMode, indexStart, length);
+    }
+
+    public static boolean isDepositBox(Sign sign) {
+        String[] lines = sign.getLines();
+        return lines[0].toLowerCase().matches("\\[deposit box]");
+    }
+
+    protected static int parseRadius(Sign sign) {
+        String radiusLine = sign.getLines()[1];
+        if (!radiusLine.matches("^\\d+$")) {
+            sign.setLine(1, String.valueOf(DEFAULT_RADIUS));
+            return DEFAULT_RADIUS;
+        }
+
+        int parsed = Integer.parseInt(radiusLine);
+        if (parsed > MAX_RADIUS) {
+            sign.setLine(1, String.valueOf(MAX_RADIUS));
+            return MAX_RADIUS;
+        }
+
+        return parsed;
+    }
+
+    protected static boolean parseLaxMode(Sign sign) {
+        return !sign.getLine(2).toLowerCase().equals("strict");
     }
 
     public static boolean isDepositBox(Inventory inventory) {
@@ -50,6 +104,52 @@ public class DepositBox {
 
         Chest chest = (Chest) holder;
         return isDepositBox(chest);
+    }
+
+    public static boolean isDepositBox(Chest chest) {
+        return getDepositBoxSign(chest) != null;
+    }
+
+    public static Sign getDepositBoxSign(Chest chest) {
+        Block chestBlock = chest.getBlock();
+        Sign sign;
+
+        for (int offsetY = -2; offsetY <= 1; ++offsetY) {
+            sign = findSignAt(chestBlock, 0, offsetY, 0);
+            if (sign != null) {
+                return sign;
+            }
+        }
+        for (int offsetX = -1; offsetX <= 1; ++offsetX) {
+            sign = findSignAt(chestBlock, offsetX, 0, 0);
+            if (sign != null) {
+                return sign;
+            }
+        }
+        for (int offsetZ = -1; offsetZ <= 1; ++offsetZ) {
+            sign = findSignAt(chestBlock, 0, 0, offsetZ);
+            if (sign != null) {
+                return sign;
+            }
+        }
+
+        return null;
+    }
+
+    private static Sign findSignAt(Block chestBlock, int offsetX, int offsetY, int offsetZ) {
+        Block blockAtFace = chestBlock.getRelative(offsetX, offsetY, offsetZ);
+        BlockState blockState = blockAtFace.getState();
+        boolean isSign = blockState instanceof Sign;
+        if (!isSign) {
+            return null;
+        }
+
+        Sign sign = (Sign) blockState;
+        if (isDepositBox(sign)) {
+            return sign;
+        }
+
+        return null;
     }
 
     public static Chest getAutoSortableChest(Inventory inventory) {
@@ -68,13 +168,12 @@ public class DepositBox {
     }
 
     public void sort() {
-        Inventory inventory = chest.getInventory();
         ItemStack[] contents = inventory.getContents();
 
         int totalSorted = 0;
         int totalFailed = 0;
 
-        for (int i = 0; i < contents.length; ++i) {
+        for (int i = indexStart; i < indexStart + length; ++i) {
             ItemStack itemStack = contents[i];
             if (itemStack == null) {
                 continue;
@@ -108,12 +207,11 @@ public class DepositBox {
 
     public ArrayList<Chest> getTargetChests() {
         ArrayList<Chest> targetChests = new ArrayList<>();
-        Location center = chest.getLocation();
-        World world = center.getWorld();
+        World world = centerPoint.getWorld();
 
-        for (int x = center.getBlockX() - radius; x <= center.getBlockX() + radius; ++x) {
-            for (int y = center.getBlockY() - radius; y <= center.getBlockY() + radius; ++y) {
-                for (int z = center.getBlockZ() - radius; z <= center.getBlockZ() + radius; ++z) {
+        for (int x = centerPoint.getBlockX() - radius; x <= centerPoint.getBlockX() + radius; ++x) {
+            for (int y = centerPoint.getBlockY() - radius; y <= centerPoint.getBlockY() + radius; ++y) {
+                for (int z = centerPoint.getBlockZ() - radius; z <= centerPoint.getBlockZ() + radius; ++z) {
                     Location targetLocation = new Location(world, x, y, z);
                     Block targetBlock = targetLocation.getBlock();
                     BlockState targetBlockState = targetBlock.getState();
@@ -165,72 +263,5 @@ public class DepositBox {
         }
 
         return false;
-    }
-
-    public static boolean isDepositBox(Chest chest) {
-        return getDepositBoxSign(chest) != null;
-    }
-
-    public static Sign getDepositBoxSign(Chest chest) {
-        Block chestBlock = chest.getBlock();
-        Sign sign;
-
-        for (int offsetY = -2; offsetY <= 1; ++offsetY) {
-            sign = findSignAt(chestBlock, 0, offsetY, 0);
-            if (sign != null) {
-                return sign;
-            }
-        }
-        for (int offsetX = -1; offsetX <= 1; ++offsetX) {
-            sign = findSignAt(chestBlock, offsetX, 0, 0);
-            if (sign != null) {
-                return sign;
-            }
-        }
-        for (int offsetZ = -1; offsetZ <= 1; ++offsetZ) {
-            sign = findSignAt(chestBlock, 0, 0, offsetZ);
-            if (sign != null) {
-                return sign;
-            }
-        }
-
-        return null;
-    }
-
-    private static Sign findSignAt(Block chestBlock, int offsetX, int offsetY, int offsetZ) {
-        Block blockAtFace = chestBlock.getRelative(offsetX, offsetY, offsetZ);
-        BlockState blockState = blockAtFace.getState();
-        boolean isSign = blockState instanceof Sign;
-        if (!isSign) {
-            return null;
-        }
-
-        Sign sign = (Sign) blockState;
-        if (isDepositBox(sign)) {
-            return sign;
-        }
-
-        return null;
-    }
-
-    public static boolean isDepositBox(Sign sign) {
-        String[] lines = sign.getLines();
-        return lines[0].toLowerCase().matches("\\[deposit box]");
-    }
-
-    private int parseRadius() {
-        String radiusLine = sign.getLines()[1];
-        if (!radiusLine.matches("^\\d+$")) {
-            sign.setLine(1, String.valueOf(DEFAULT_RADIUS));
-            return DEFAULT_RADIUS;
-        }
-
-        int parsed = Integer.parseInt(radiusLine);
-        if (parsed > MAX_RADIUS) {
-            sign.setLine(1, String.valueOf(MAX_RADIUS));
-            return MAX_RADIUS;
-        }
-
-        return parsed;
     }
 }
