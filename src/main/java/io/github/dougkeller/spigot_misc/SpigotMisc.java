@@ -10,6 +10,7 @@ import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class SpigotMisc extends JavaPlugin implements Listener {
@@ -50,6 +51,12 @@ public class SpigotMisc extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
+        DepositBoxes plugin = new DepositBoxes(this);
+        plugin.handle(event);
+    }
+
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
         DepositBoxes plugin = new DepositBoxes(this);
         plugin.handle(event);
     }

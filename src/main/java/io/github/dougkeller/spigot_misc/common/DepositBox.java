@@ -12,10 +12,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.stream.Stream;
 
 public class DepositBox {
     public static final int DEFAULT_RADIUS = 5;
@@ -197,12 +198,40 @@ public class DepositBox {
             player.sendMessage(String.format(ChatColor.GOLD + "Could not deposit %d %s.", totalFailed, noun));
         }
 
+        if (totalSorted == 0 && totalFailed == 0 && inventory instanceof PlayerInventory) {
+            player.sendMessage(String.format(ChatColor.GOLD + "No items to deposit!"));
+        }
+
         inventory.setContents(contents);
     }
 
     private boolean store(ItemStack itemStack) {
         ArrayList<Chest> targetChests = getTargetChests();
-        return storeStrict(itemStack, targetChests) || laxMode && storeSimilar(itemStack, targetChests);
+        HashMap<Chest, Integer> scores = getScores(itemStack, targetChests);
+
+        targetChests.sort(new Comparator<Chest>() {
+            @Override
+            public int compare(Chest o1, Chest o2) {
+                return scores.get(o2) - scores.get(o1);
+            }
+        });
+
+        for (Chest targetChest : targetChests) {
+            if (scores.get(targetChest) == 0) {
+                return false;
+            }
+
+            Inventory targetInventory = targetChest.getInventory();
+            HashMap<Integer, ItemStack> excessItemStacks = targetInventory.addItem(itemStack);
+            int remaining = excessItemStacks.isEmpty() ? 0 : excessItemStacks.get(0).getAmount();
+            itemStack.setAmount(remaining);
+
+            if (itemStack.getAmount() == 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public ArrayList<Chest> getTargetChests() {
@@ -225,43 +254,32 @@ public class DepositBox {
         return targetChests;
     }
 
-    private boolean storeStrict(ItemStack itemStack, ArrayList<Chest> targetChests) {
+    private HashMap<Chest, Integer> getScores(ItemStack itemStack, ArrayList<Chest> targetChests) {
+        HashMap<Chest, Integer> scores = new HashMap<>();
+
         for (Chest targetChest : targetChests) {
-            Inventory targetInventory = targetChest.getInventory();
-            if (!targetInventory.containsAtLeast(itemStack, 1)) {
-                continue;
-            }
-
-            HashMap<Integer, ItemStack> excessItemStacks = targetInventory.addItem(itemStack);
-            int remaining = excessItemStacks.isEmpty() ? 0 : excessItemStacks.get(0).getAmount();
-            itemStack.setAmount(remaining);
-
-            if (itemStack.getAmount() == 0) {
-                return true;
-            }
+            scores.put(targetChest, getScore(itemStack, targetChest));
         }
 
-        return false;
+        return scores;
     }
 
-    private boolean storeSimilar(ItemStack itemStack, ArrayList<Chest> targetChests) {
-        for (Chest targetChest : targetChests) {
-            Inventory targetInventory = targetChest.getInventory();
-            Stream<ItemStack> stream = Stream.of(targetInventory.getContents());
-            boolean containsSimilar = stream.anyMatch(i -> i != null && ItemStackComparator.isSimilarItem(itemStack, i));
-            if (!containsSimilar) {
+    private int getScore(ItemStack itemStack, Chest targetChest) {
+        int score = 0;
+
+        Inventory targetInventory = targetChest.getInventory();
+        for (ItemStack targetStack : targetInventory.getContents()) {
+            if (targetStack == null) {
                 continue;
             }
 
-            HashMap<Integer, ItemStack> excessItemStacks = targetInventory.addItem(itemStack);
-            int remaining = excessItemStacks.isEmpty() ? 0 : excessItemStacks.get(0).getAmount();
-            itemStack.setAmount(remaining);
-
-            if (itemStack.getAmount() == 0) {
-                return true;
+            if (ItemStackComparator.isSameItem(itemStack, targetStack)) {
+                score += 100;
+            } else if (laxMode && ItemStackComparator.isSimilarItem(itemStack, targetStack)) {
+                score += 1;
             }
         }
 
-        return false;
+        return score;
     }
 }
