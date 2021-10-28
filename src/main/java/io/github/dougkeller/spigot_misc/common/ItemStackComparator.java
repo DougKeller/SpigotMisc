@@ -36,6 +36,6 @@ public class ItemStackComparator implements Comparator<ItemStack> {
     }
 
     public static boolean isSameItem(ItemStack a, ItemStack b) {
-        return a.getType().equals(b.getType()) && a.getData().equals(b.getData()) && a.getItemMeta().equals(b.getItemMeta());
+        return a.isSimilar(b);
     }
 }

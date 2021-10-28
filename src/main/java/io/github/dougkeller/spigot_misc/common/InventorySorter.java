@@ -38,6 +38,6 @@ public class InventorySorter {
             list.set(i + indexStart, sortableList.get(i));
         }
 
-        return (ItemStack[]) list.toArray();
+        return list.toArray(contents);
     }
 }

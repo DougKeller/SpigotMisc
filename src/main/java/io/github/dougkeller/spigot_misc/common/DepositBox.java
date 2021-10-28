@@ -268,15 +268,16 @@ public class DepositBox {
         int score = 0;
 
         Inventory targetInventory = targetChest.getInventory();
-        for (ItemStack targetStack : targetInventory.getContents()) {
+        ItemStack[] targetStacks = targetInventory.getContents();
+        for (ItemStack targetStack : targetStacks) {
             if (targetStack == null) {
                 continue;
             }
 
             if (ItemStackComparator.isSameItem(itemStack, targetStack)) {
-                score += 100;
+                score += 3025; // 55^2
             } else if (laxMode && ItemStackComparator.isSimilarItem(itemStack, targetStack)) {
-                score += 1;
+                score += 55; // 55^1
             }
         }
 
